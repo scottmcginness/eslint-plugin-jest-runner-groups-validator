@@ -36,7 +36,10 @@ const locationOfTextInComment = ({ text, comment }) => {
  * @param {string} _.group
  * @param {{ raw: { value: string, loc?: JRGV.ESTree.Location } }} _.comment
  */
-const locationOfGroupInComment = ({ group, comment }) => locationOfTextInComment({ text: `@group\\s+${group}`, comment });
+const locationOfGroupInComment = ({ group, comment }) => locationOfTextInComment({
+  text: `@group\\s*${group}`,
+  comment
+});
 
 /**
  * @param {object} _

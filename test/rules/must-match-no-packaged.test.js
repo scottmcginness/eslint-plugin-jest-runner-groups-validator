@@ -135,6 +135,20 @@ ruleTester.run('must-match', rule, {
     name: 'Fails if there is an empty group',
     code: dedent`
        /**
+        * @group
+        */
+       describe("");`,
+    errors: [{
+      message: 'Group name cannot be empty.',
+      line: 2,
+      column: 4,
+      endLine: 2,
+      endColumn: 10
+    }]
+  }, {
+    name: 'Fails if there is a whitespace-only group',
+    code: dedent`
+       /**
         * @group    
         */
        describe("");`,
