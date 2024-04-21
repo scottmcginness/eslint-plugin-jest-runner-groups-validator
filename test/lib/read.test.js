@@ -76,12 +76,34 @@ describe('read', () => {
         expect(values).to.deep.equal(['Fast']);
       });
 
+      it('returns the list if they are an array of names with duplicates', () => {
+        fsReadStub.returns(JSON.stringify({ squadGroups: ['Fast', 'Fast'] }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal(['Fast']);
+      });
+
       it('returns the leaves of the object tree if they are an object', () => {
         const squadGroups = {
           Blue: ['Fast', 'Slow'],
           Red: ['Easy', 'Hard'],
           Green: ['Good', 'Bad'],
           Orange: ['Manual', 'Perf'],
+          Ignored: {}
+        };
+
+        fsReadStub.returns(JSON.stringify({ squadGroups }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal(['Fast', 'Slow', 'Easy', 'Hard', 'Good', 'Bad', 'Manual', 'Perf']);
+      });
+
+      it('returns the leaves of the object tree if they are an object, allowing for duplicates', () => {
+        const squadGroups = {
+          Blue: ['Fast', 'Slow'],
+          Red: ['Easy', 'Hard'],
+          Green: ['Good', 'Bad'],
+          Orange: ['Manual', 'Perf', 'Fast', 'Easy'],
           Ignored: {}
         };
 
@@ -125,12 +147,34 @@ describe('read', () => {
         expect(values).to.deep.equal(['Fast']);
       });
 
+      it('returns the list if they are an array of names including duplicates', () => {
+        fsReadStub.returns(JSON.stringify({ multiGroups: ['Fast', 'Fast'] }));
+
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal(['Fast']);
+      });
+
       it('returns the leaves of the object tree if they are an object', () => {
         const multiGroups = {
           Blue: ['Fast', 'Slow'],
           Red: ['Easy', 'Hard'],
           Green: ['Good', 'Bad'],
           Orange: ['Manual', 'Perf'],
+          Ignored: {}
+        };
+
+        fsReadStub.returns(JSON.stringify({ multiGroups }));
+
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal(['Fast', 'Slow', 'Easy', 'Hard', 'Good', 'Bad', 'Manual', 'Perf']);
+      });
+
+      it('returns the leaves of the object tree if they are an object, allowing for duplicates', () => {
+        const multiGroups = {
+          Blue: ['Fast', 'Slow'],
+          Red: ['Easy', 'Hard'],
+          Green: ['Good', 'Bad'],
+          Orange: ['Manual', 'Perf', 'Fast', 'Easy'],
           Ignored: {}
         };
 
