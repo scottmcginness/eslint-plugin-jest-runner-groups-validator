@@ -109,38 +109,15 @@ const mustMatch = {
       category: 'Possible Errors',
       recommended: true
     },
-    // TODO: schema isn't correct.
     schema: [
       {
-        anyOf: [
-          {
-            type: 'object',
-            properties: {
-              allowedValues: {
-                type: 'array',
-                items: {
-                  type: 'string'
-                }
-              },
-              allowComputed: {
-                type: 'boolean'
-              }
-            },
-            additionalProperties: false
-          },
-          {
-            type: 'object',
-            properties: {
-              markdownFile: {
-                type: 'string'
-              },
-              allowComputed: {
-                type: 'boolean'
-              }
-            },
-            additionalProperties: false
+        type: 'object',
+        properties: {
+          propertyName: {
+            type: 'string'
           }
-        ]
+        },
+        additionalProperties: false
       }
     ]
   },
