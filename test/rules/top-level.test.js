@@ -18,7 +18,6 @@ const ruleTester = new RuleTester();
  */
 const dedent = (str, args) => (args ? dedentCore(str, args) : dedentCore(str)).split(/[\r\n]/g).join(EOL);
 
-// TODO: add lines to the invalid errors.
 ruleTester.run('top-level', rule, {
   valid: [{
     name: 'Top level with a default group is allowed',
@@ -97,7 +96,9 @@ ruleTester.run('top-level', rule, {
     filename: 'input.test.ts',
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 1,
       column: 1,
+      endLine: 1,
       endColumn: 12
     }]
   }, {
@@ -114,7 +115,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 2,
       column: 1,
+      endLine: 2,
       endColumn: 14
     }]
   }, {
@@ -131,7 +134,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 2,
       column: 1,
+      endLine: 2,
       endColumn: 14
     }]
   }, {
@@ -149,7 +154,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 3,
       column: 1,
+      endLine: 3,
       endColumn: 14
     }]
   }, {
@@ -168,7 +175,9 @@ ruleTester.run('top-level', rule, {
        describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 4,
       column: 1,
+      endLine: 4,
       endColumn: 14
     }]
   }, {
@@ -193,7 +202,9 @@ ruleTester.run('top-level', rule, {
        describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 7,
       column: 1,
+      endLine: 7,
       endColumn: 14
     }]
   }, {
@@ -220,7 +231,9 @@ ruleTester.run('top-level', rule, {
        });`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 4,
       column: 1,
+      endLine: 8,
       endColumn: 4
     }]
   }, {
@@ -244,7 +257,9 @@ ruleTester.run('top-level', rule, {
        });`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 1,
       column: 1,
+      endLine: 5,
       endColumn: 4
     }]
   }, {
@@ -262,7 +277,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 2,
       column: 1,
+      endLine: 2,
       endColumn: 14
     }]
   }, {
@@ -282,7 +299,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 3,
       column: 1,
+      endLine: 3,
       endColumn: 14
     }]
   }, {
@@ -303,7 +322,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 4,
       column: 1,
+      endLine: 4,
       endColumn: 14
     }]
   }, {
@@ -321,7 +342,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 2,
       column: 1,
+      endLine: 2,
       endColumn: 14
     }]
   }, {
@@ -339,7 +362,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 2,
       column: 1,
+      endLine: 2,
       endColumn: 14
     }]
   }, {
@@ -357,7 +382,9 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     errors: [{
       message: 'Test file must have at least one Jest runner group',
+      line: 1,
       column: 1,
+      endLine: 2,
       endColumn: 14
     }]
   }].map((c) => ({ ...c, filename: c.filename ?? 'input.test.ts' }))

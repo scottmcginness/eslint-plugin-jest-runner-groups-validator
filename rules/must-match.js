@@ -15,7 +15,6 @@ const autocorrectCreator = memoize(require('autocorrect'));
  * @param {{ raw: { value: string, loc?: JRGV.ESTree.Location } }} _.comment
  */
 const locationOfTextInComment = ({ text, comment }) => {
-  // TODO: what if line shift is 0 or -1?
   const find = new RegExp(text, 'g');
   const commentLines = comment.raw.value.split(EOL);
 
