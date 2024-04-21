@@ -1,106 +1,115 @@
 // @ts-check
+const { parseWithComments } = require('jest-docblock');
+const { EOL } = require('os');
 const { readAllowedValues } = require('../lib/read');
 const memoize = require('../lib/memoize');
-const { messageIds } = require('../lib/constants');
-const { isTagsProperty, isIrrelevant } = require('../lib/tree');
+const { messageIds, defaultTopLevelComment, includeFileNames } = require('../lib/constants');
 
 /** @type {((options: { words: string[] }) => (str: string) => string)} */
 const autocorrectCreator = memoize(require('autocorrect'));
 
 /**
- * Determines whether computed values are allowed for tags.
- * @param {TV.ESLint.Rule.RuleContext} context - The current context.
- * @returns True if the 'allowComputed' flag is set to true, otherwise false.
+ * @param {object} _
+ * @param {string} _.group
+ * @param {Comment} _.comment
  */
-const shouldAllowComputed = (context) => context?.options?.[0]?.allowComputed;
+const locationOfTextInComment = ({ text, comment }) => {
+  // TODO: what if line shift is 0 or -1?
+  const find = new RegExp(text, 'g');
 
-/**
- * Reports on a single invalid tag, which must be a string in the stored tag set.
- * @param {TV.ESTree.Expression | TV.ESTree.Pattern | TV.ESTree.SpreadElement} node - The node at the current value of the tags property.
- * @param {TV.ESLint.Rule.RuleContext} context - The current context.
- * @param {string} using - A string describing which tag set we are using.
- * @param {((str: string) => string)} autocorrect
- * @param {boolean} insideArray
- */
-const reportSingleTag = (node, context, using, autocorrect, insideArray) => {
-  if (node.type === 'Literal' && typeof node.value === 'string') {
-    if (node.value === '') {
-      context.report({
-        node,
-        messageId: messageIds.emptyString
-      });
-    } else {
-      // We have to go through the whole array to check if there is a match.
-      // Might as well ask it for the autocorrection at the same time.
-      // This will return the same string if they match, so we'll check that immediately after.
-      const closest = autocorrect(node.value);
+  const lineShift = comment.raw.value.split(EOL).findIndex((v) => find.test(v));
 
-      if (node.value !== closest) {
-        context.report({
-          node,
-          messageId: messageIds.suggested,
-          data: {
-            value: node.value,
-            using,
-            closest
-          }
-        });
-      }
-    }
-  } else if (node.type === 'TemplateLiteral') {
-    // TODO: make this an option; to allow template literals.
-    // Do nothing. It might be correct, we just can't tell here.
-  } else if (!shouldAllowComputed(context)) {
-    context.report({
-      node,
-      messageId: insideArray ? messageIds.nonLiteralInside : messageIds.nonLiteralOutside
-    });
-  }
+  const colMatch = comment.raw.value.split(EOL)[lineShift].match(find);
+  const colShift = comment.raw.value.split(EOL)[lineShift].indexOf(colMatch[0]);
+
+  const line = comment.raw.loc.start.line + lineShift;
+  const loc = { start: { line, column: colShift }, end: { line, column: colShift + colMatch[0].length } };
+  return loc;
 };
 
 /**
- * Reports on any invalid tags values, depending on whether we were given a string, array or something else.
- * @param {TV.ESTree.Expression | TV.ESTree.Pattern} node - The node at the current value of the tags property.
- * @param {TV.ESLint.Rule.RuleContext} context - The current context.
- * @param {string} using - A string describing which tag set we are using.
- * @param {((str: string) => string)} autocorrect
+ * @param {object} _
+ * @param {string} _.group
+ * @param {Comment} _.comment
  */
-const reportTagsValue = (node, context, using, autocorrect) => {
-  if (node.type === 'Literal') {
-    reportSingleTag(node, context, using, autocorrect, false);
-  } else if (node.type === 'ArrayExpression') {
-    if (node.elements.length === 0) {
-      context.report({ node, messageId: messageIds.emptyArray });
-    } else {
-      node.elements.forEach((e) => {
-        reportSingleTag(e, context, using, autocorrect, true);
-      });
+const locationOfGroupInComment = ({ group, comment }) => locationOfTextInComment({ text: `@group\\s+${group}`, comment });
+
+const reportPlaceholderGroup = ({ context, group, comment }) => {
+  const loc = locationOfGroupInComment({ group, comment });
+
+  context.report({
+    loc,
+    messageId: messageIds.placeholderGroupName,
+    data: {
+      value: group.trim()
     }
-  } else if (node.type === 'TemplateLiteral') {
-    // TODO: make this an option; to allow template literals.
-    // Do nothing. It might be correct, we just can't tell here.
-  } else if (!shouldAllowComputed(context)) {
-    context.report({ node, messageId: messageIds.nonLiteralOutside });
-  }
+  });
 };
 
-/** @type {TV.ESLint.Rule.RuleModule} */
+const reportEmptyGroup = ({ context, group, comment }) => {
+  const loc = locationOfGroupInComment({ group, comment });
+
+  context.report({
+    loc,
+    messageId: messageIds.emptyGroup,
+    data: {
+      value: group.trim()
+    }
+  });
+};
+
+/**
+ * @param {object} _
+ * @param {Context} _.context
+ * @param {string} _.group
+ * @param {Comment} _.comment
+ * @param {string} [_.closest]
+ */
+const reportBadGroupName = ({
+  context,
+  group,
+  comment,
+  closest
+}) => {
+  const loc = locationOfGroupInComment({ group, comment });
+
+  context.report({
+    loc,
+    messageId: closest ? messageIds.invalidGroupName : messageIds.noDefinedGroups,
+    data: {
+      value: group.trim(),
+      closest
+    }
+  });
+};
+
+/**
+ *
+ * @param {JRGV.ESTree.Comment[]} comments
+ * @param {JRGV.ESTree.Program['body'][0]} bodyStart
+ * @returns
+ */
+const parseAll = (comments, bodyStart) => comments
+  .filter((c) => c.type === 'Block' && (!bodyStart || c.loc.start.line < bodyStart.loc.start.line))
+  .map((c) => ({ parsed: parseWithComments(c.value), raw: c }));
+
+/** @type {JRGV.ESLint.Rule.RuleModule} */
 const mustMatch = {
   meta: {
     type: 'problem',
     messages: {
-      [messageIds.invalid]: 'Invalid tag',
-      [messageIds.emptyArray]: 'Invalid tags; must not be empty',
-      [messageIds.emptyString]: 'Invalid tag; must not be empty',
-      [messageIds.nonLiteralOutside]: 'Invalid tags; must be a literal string or an array of strings',
-      [messageIds.nonLiteralInside]: 'Invalid tag; must be a literal string',
-      [messageIds.suggested]: "Invalid tag '{{value}}' (using {{using}}). Did you mean '{{closest}}'?"
+      [messageIds.noDefinedGroups]: "Group name '{{value}}' is invalid, because there are no defined groups in the package.",
+      [messageIds.invalidGroupName]: "Invalid group name '{{value}}'. Did you mean '{{closest}}'?",
+      [messageIds.emptyGroup]: 'Group name cannot be empty.',
+      [messageIds.placeholderGroupName]: "Invalid group name '{{value}}'. This generated group is only a placeholder.",
+      [messageIds.placeholderFileText]: 'Placeholder text for groups should be replaced.'
     },
     docs: {
-      description: 'Enforce that the Mocha test blocks have tags from the correct set',
+      description: 'Enforce that the Jest runner groups have valid names',
       category: 'Possible Errors',
       recommended: true
     },
+    // TODO: schema isn't correct.
     schema: [
       {
         anyOf: [
@@ -136,29 +145,63 @@ const mustMatch = {
     ]
   },
   create(context) {
-    const [allowedValues, using] = readAllowedValues(context);
+    const allowedValues = readAllowedValues(context);
+    const autocorrect = allowedValues.length > 0
+      ? autocorrectCreator({ words: allowedValues })
+      : (w) => w;
 
-    if (allowedValues.length === 0) {
-      throw new Error(`At least one tag must be allowed; found none (using ${using}).`);
+    const sourceCode = context.getSourceCode();
+    const filename = context.getFilename();
+
+    if (!includeFileNames.test(filename)) {
+      return {
+        Program() {
+          // Do nothing.
+        }
+      };
     }
 
-    const autocorrect = autocorrectCreator({ words: allowedValues });
+    const allComments = parseAll(sourceCode.ast.comments, sourceCode.ast.body[0]);
 
     return {
-      CallExpression(node) {
-        if (isIrrelevant(node, 3)) {
-          return;
-        }
+      Program() {
+        allComments.forEach((comment) => {
+          if (comment.parsed.comments.includes(defaultTopLevelComment)) {
+            const loc = locationOfTextInComment({ text: defaultTopLevelComment, comment });
 
-        const arg = node.arguments[1];
-
-        if (arg.type === 'ObjectExpression') {
-          const tagsProperty = arg.properties.find(isTagsProperty);
-
-          if (tagsProperty) {
-            reportTagsValue(tagsProperty.value, context, using, autocorrect);
+            context.report({
+              loc,
+              messageId: messageIds.placeholderFileText
+            });
           }
-        }
+
+          if (!comment.parsed.pragmas || !('group' in comment.parsed.pragmas)) {
+            // This is ok, there are no groups to check in this comment.
+            return;
+          }
+
+          const commentGroups = Array.isArray(comment.parsed.pragmas.group)
+            ? comment.parsed.pragmas.group
+            : [comment.parsed.pragmas.group];
+
+          commentGroups.forEach((group) => {
+            if (group.trim() === 'TODO') {
+              reportPlaceholderGroup({ context, group, comment });
+            } else if (group.trim() === '') {
+              reportEmptyGroup({ context, group, comment });
+            } else if (allowedValues.length === 0) {
+              reportBadGroupName({ context, group, comment });
+            } else {
+              const closest = autocorrect(group);
+
+              if (closest !== group) {
+                reportBadGroupName({
+                  context, group, comment, closest
+                });
+              }
+            }
+          });
+        });
       }
     };
   }

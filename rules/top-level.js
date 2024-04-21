@@ -1,11 +1,7 @@
 // @ts-check
 const { EOL } = require('os');
 const { parseWithComments, print } = require('jest-docblock');
-const { messageIds } = require('../lib/constants');
-
-const defaultTopLevelComment = 'TODO: describe the tests in this file.';
-
-const includeFileNames = /[.]test[.](ts|tsx|js|jsx|mjs|cjs)$/gi;
+const { messageIds, defaultTopLevelComment, includeFileNames } = require('../lib/constants');
 
 const ignoreCommentsContaining = ['eslint-', '@ts-'];
 
@@ -89,7 +85,7 @@ const topLevel = {
           return;
         }
 
-        if (!first.parsed.pragmas || !first.parsed.pragmas.group) {
+        if (!first.parsed.pragmas || !('group' in first.parsed.pragmas)) {
           // We have a topmost comment, but it didn't contain any groups.
           reportAndFixNoGroups(first, context, node);
         }

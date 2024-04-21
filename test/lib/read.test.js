@@ -1,5 +1,4 @@
 const chai = require('chai');
-const dedent = require('dedent');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
@@ -12,9 +11,7 @@ chai.use(sinonChai);
 const fsReadStub = sinon.stub();
 
 const { readAllowedValues } = proxyquire('../../lib/read', {
-  fs: {
-    readFileSync: fsReadStub
-  },
+  fs: { readFileSync: fsReadStub },
   './memoize': (/** @type {any} */ func) => func
 });
 
@@ -23,103 +20,125 @@ describe('read', () => {
     /** @type {any} */
     let contextUt;
 
-    /** @type {Sentinel.Objects} */
-    let ф;
-
     beforeEach(() => {
       contextUt = {};
-      ф = sentinel.create();
-
       fsReadStub.reset();
     });
 
-    context('when using the default list', () => {
+    context('when the package.json cannot be read', () => {
       beforeEach(() => {
-        contextUt.options = [];
+        fsReadStub.throws('Unable to read package');
       });
 
-      it('returns the default list', () => {
-        const [values, using] = readAllowedValues(contextUt);
-        expect(using).to.equal('default list');
-        expect(values).to.deep.equal([
-          '@smoke',
-          '@regression',
-          '@slow',
-          '@fast',
-          '@low',
-          '@medium',
-          '@high',
-          '@critical'
-        ]);
+      it('returns an empty list', () => {
+        const values = readAllowedValues();
+        expect(values).to.deep.equal([]);
       });
     });
 
-    context('when an option is given, but it’s empty', () => {
+    context('when the package.json does not have squadGroups', () => {
       beforeEach(() => {
-        contextUt.options = [{}];
+        fsReadStub.returns(JSON.stringify({}));
       });
 
-      it('throws an exception', () => {
-        expect(() => readAllowedValues(contextUt)).to.throw(
-          "Option must be either 'allowedValues' or 'markdownFile'."
-        );
+      it('returns an empty list', () => {
+        const values = readAllowedValues();
+        expect(values).to.deep.equal([]);
       });
     });
 
-    context('when given allowedValues', () => {
-      beforeEach(() => {
-        contextUt.options = [{ allowedValues: ф.allowedList }];
+    context('when the package.json has squadGroups', () => {
+      it('returns an empty list if they are a number', () => {
+        fsReadStub.returns(JSON.stringify({ squadGroups: 123 }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal([]);
       });
 
-      it('returns those allowed values', () => {
-        const [values, using] = readAllowedValues(contextUt);
-        expect(using).to.equal('allowed values');
-        expect(values).to.equal(ф.allowedList);
+      it('returns an empty list if they are a string', () => {
+        fsReadStub.returns(JSON.stringify({ squadGroups: 'abc' }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal([]);
+      });
+
+      it('returns an empty list if they are a boolean', () => {
+        fsReadStub.returns(JSON.stringify({ squadGroups: true }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal([]);
+      });
+
+      it('returns the list if they are an array of names', () => {
+        fsReadStub.returns(JSON.stringify({ squadGroups: ['Fast'] }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal(['Fast']);
+      });
+
+      it('returns the leaves of the object tree if they are an object', () => {
+        const squadGroups = {
+          Blue: ['Fast', 'Slow'],
+          Red: ['Easy', 'Hard'],
+          Green: ['Good', 'Bad'],
+          Orange: ['Manual', 'Perf'],
+          Ignored: {}
+        };
+
+        fsReadStub.returns(JSON.stringify({ squadGroups }));
+
+        const values = readAllowedValues();
+        expect(values).to.deep.equal(['Fast', 'Slow', 'Easy', 'Hard', 'Good', 'Bad', 'Manual', 'Perf']);
       });
     });
 
-    context('when given markdownFile', () => {
+    context('when the package.json has multiGroups and this is the property name', () => {
       beforeEach(() => {
-        contextUt.options = [{ markdownFile: ф.markdownFilePath }];
+        contextUt.options = [{ propertyName: 'multiGroups' }];
       });
 
-      // eslint-disable-next-line mocha/no-setup-in-describe
-      [{
-        name: 'single tag',
-        file: dedent`
-          @first`,
-        expected: ['@first']
-      }, {
-        name: 'two tags',
-        file: dedent`
-          @first
-          @second`,
-        expected: ['@first', '@second']
-      }, {
-        name: 'multiple tags with comments and surrounding text',
-        file: dedent`
-          This is a title
-          - @first
-          - @second  -> some comment
-            • @third  // some other comment, which will be ignored
-            • @fourth
-          + @fifth (more commentary)
-          
-          
-          Thiis is a footer`,
-        expected: ['@first', '@second', '@third', '@fourth', '@fifth']
-      }]
-        .forEach(({ name, file, expected }) => {
-          it(`returns a variety of tags from the given file (${name})`, () => {
-            fsReadStub.returns(file);
+      it('returns an empty list if they are a number', () => {
+        fsReadStub.returns(JSON.stringify({ multiGroups: 123 }));
 
-            const [values, using] = readAllowedValues(contextUt);
-            expect(using).to.equal('markdown file');
-            expect(values).to.deep.equal(expected);
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal([]);
+      });
 
-            expect(fsReadStub).to.have.been.calledWith(ф.markdownFilePath, 'utf8');
-          });
-        });
+      it('returns an empty list if they are a string', () => {
+        fsReadStub.returns(JSON.stringify({ multiGroups: 'abc' }));
+
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal([]);
+      });
+
+      it('returns an empty list if they are a boolean', () => {
+        fsReadStub.returns(JSON.stringify({ multiGroups: true }));
+
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal([]);
+      });
+
+      it('returns the list if they are an array of names', () => {
+        fsReadStub.returns(JSON.stringify({ multiGroups: ['Fast'] }));
+
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal(['Fast']);
+      });
+
+      it('returns the leaves of the object tree if they are an object', () => {
+        const multiGroups = {
+          Blue: ['Fast', 'Slow'],
+          Red: ['Easy', 'Hard'],
+          Green: ['Good', 'Bad'],
+          Orange: ['Manual', 'Perf'],
+          Ignored: {}
+        };
+
+        fsReadStub.returns(JSON.stringify({ multiGroups }));
+
+        const values = readAllowedValues(contextUt);
+        expect(values).to.deep.equal(['Fast', 'Slow', 'Easy', 'Hard', 'Good', 'Bad', 'Manual', 'Perf']);
+      });
     });
   });
 });

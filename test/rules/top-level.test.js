@@ -54,32 +54,32 @@ ruleTester.run('top-level', rule, {
          */
         describe('', function() {});`
   }, {
-    name: 'Top level with missing groups but in .test.ts file is allowed',
+    name: 'Top level with missing groups but not in .test.ts file is allowed',
     code: dedent`
         describe('', function() {});`,
     filename: 'other.ts'
   }, {
-    name: 'Top level with missing groups but in .test.tsx file is allowed',
+    name: 'Top level with missing groups but not in .test.tsx file is allowed',
     code: dedent`
         describe('', function() {});`,
     filename: 'other.tsx'
   }, {
-    name: 'Top level with missing groups but in .test.js file is allowed',
+    name: 'Top level with missing groups but not in .test.js file is allowed',
     code: dedent`
         describe('', function() {});`,
     filename: 'other.js'
   }, {
-    name: 'Top level with missing groups but in .test.jsx file is allowed',
+    name: 'Top level with missing groups but not in .test.jsx file is allowed',
     code: dedent`
         describe('', function() {});`,
     filename: 'other.jsx'
   }, {
-    name: 'Top level with missing groups but in .test.mjs file is allowed',
+    name: 'Top level with missing groups but not in .test.mjs file is allowed',
     code: dedent`
         describe('', function() {});`,
     filename: 'other.mjs'
   }, {
-    name: 'Top level with missing groups but in .test.cjs file is allowed',
+    name: 'Top level with missing groups but not in .test.cjs file is allowed',
     code: dedent`
         describe('', function() {});`,
     filename: 'other.cjs'
@@ -89,7 +89,7 @@ ruleTester.run('top-level', rule, {
     code: 'describe();',
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -107,7 +107,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -142,7 +142,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -233,7 +233,7 @@ ruleTester.run('top-level', rule, {
        });`,
     output: dedent`
        /**
-        * TODO: describe the tests in this file.
+        * TODO: Describe the tests in this file.
         *
         * @group TODO
         */
@@ -254,7 +254,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -273,7 +273,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -313,7 +313,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -331,7 +331,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
@@ -349,7 +349,7 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
-       * TODO: describe the tests in this file.
+       * TODO: Describe the tests in this file.
        *
        * @group TODO
        */
