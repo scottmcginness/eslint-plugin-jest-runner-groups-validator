@@ -32,6 +32,11 @@ ruleTester.run('must-match', rule, {
     code: dedent`
         describe("");`
   }, {
+    name: 'Missing groups in the top-level comment is allowed because that is checked by top-level',
+    code: dedent`
+        /** File comment */
+        describe("");`
+  }, {
     name: 'Group with bad name but not in .test.ts file is allowed',
     code: dedent`
         /**

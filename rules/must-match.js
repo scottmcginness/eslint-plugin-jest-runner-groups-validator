@@ -146,9 +146,7 @@ const mustMatch = {
     }
 
     const allowedValues = readAllowedValues(context);
-    const autocorrect = allowedValues.length > 0
-      ? autocorrectCreator({ words: allowedValues })
-      : (/** @type {string} */ w) => w;
+    const autocorrect = allowedValues.length > 0 ? autocorrectCreator({ words: allowedValues }) : undefined;
 
     const allComments = parseAll(sourceCode.ast.comments, sourceCode.ast.body[0]);
 
