@@ -1,7 +1,6 @@
 const proxyquire = require('proxyquire');
 const { RuleTester } = require('eslint');
-const dedentCore = require('dedent');
-const { EOL } = require('os');
+const dedent = require('./dedent');
 
 const rule = proxyquire('../../rules/top-level', {
   '../lib/memoize': (/** @type {any} */ func) => func,
@@ -11,12 +10,6 @@ const rule = proxyquire('../../rules/top-level', {
 });
 
 const ruleTester = new RuleTester();
-
-/**
- * @param {TemplateStringsArray} str
- * @param {any[]} [args]
- */
-const dedent = (str, args) => (args ? dedentCore(str, args) : dedentCore(str)).split(/[\r\n]/g).join(EOL);
 
 ruleTester.run('top-level', rule, {
   valid: [{

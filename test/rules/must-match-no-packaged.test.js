@@ -1,7 +1,6 @@
-const dedentCore = require('dedent');
 const { RuleTester } = require('eslint');
-const proxyquire = require('proxyquire').noPreserveCache();
-const { EOL } = require('os');
+const proxyquire = require('proxyquire');
+const dedent = require('./dedent');
 
 const rule = proxyquire('../../rules/must-match', {
   '../lib/memoize': (/** @type {any} */ func) => func,
@@ -9,12 +8,6 @@ const rule = proxyquire('../../rules/must-match', {
     readAllowedValues: () => []
   })
 });
-
-/**
- * @param {TemplateStringsArray} str
- * @param {any[]} [args]
- */
-const dedent = (str, args) => (args ? dedentCore(str, args) : dedentCore(str)).split(/[\r\n]/g).join(EOL);
 
 const ruleTester = new RuleTester();
 
