@@ -3,37 +3,48 @@ const { parseWithComments } = require('jest-docblock');
 const { EOL } = require('os');
 const { readAllowedValues } = require('../lib/read');
 const memoize = require('../lib/memoize');
-const { messageIds, defaultTopLevelComment, includeFileNames } = require('../lib/constants');
+const { messageIds, defaultTopLevelComment } = require('../lib/constants');
+const { onlyRunOnTestFiles } = require('../lib/maybe-do-nothing');
 
 /** @type {((options: { words: string[] }) => (str: string) => string)} */
 const autocorrectCreator = memoize(require('autocorrect'));
 
 /**
  * @param {object} _
- * @param {string} _.group
- * @param {Comment} _.comment
+ * @param {string} _.text
+ * @param {{ raw: { value: string, loc?: JRGV.ESTree.Location } }} _.comment
  */
 const locationOfTextInComment = ({ text, comment }) => {
   // TODO: what if line shift is 0 or -1?
   const find = new RegExp(text, 'g');
+  const commentLines = comment.raw.value.split(EOL);
 
-  const lineShift = comment.raw.value.split(EOL).findIndex((v) => find.test(v));
+  const lineShift = commentLines.findIndex((v) => find.test(v));
 
-  const colMatch = comment.raw.value.split(EOL)[lineShift].match(find);
-  const colShift = comment.raw.value.split(EOL)[lineShift].indexOf(colMatch[0]);
+  const colMatch = commentLines[lineShift].match(find);
+  const colShift = commentLines[lineShift].indexOf(colMatch[0]);
 
   const line = comment.raw.loc.start.line + lineShift;
-  const loc = { start: { line, column: colShift }, end: { line, column: colShift + colMatch[0].length } };
-  return loc;
+
+  return {
+    start: { line, column: colShift },
+    end: { line, column: colShift + colMatch[0].length }
+  };
 };
 
 /**
  * @param {object} _
  * @param {string} _.group
- * @param {Comment} _.comment
+ * @param {{ raw: { value: string, loc?: JRGV.ESTree.Location } }} _.comment
  */
 const locationOfGroupInComment = ({ group, comment }) => locationOfTextInComment({ text: `@group\\s+${group}`, comment });
 
+/**
+ * @param {object} _
+ * @param {JRGV.ESLint.Rule.RuleContext} _.context
+ * @param {string} _.group
+ * @param {{ raw: { value: string, loc?: JRGV.ESTree.Location } }} _.comment
+ */
 const reportPlaceholderGroup = ({ context, group, comment }) => {
   const loc = locationOfGroupInComment({ group, comment });
 
@@ -46,6 +57,12 @@ const reportPlaceholderGroup = ({ context, group, comment }) => {
   });
 };
 
+/**
+ * @param {object} _
+ * @param {JRGV.ESLint.Rule.RuleContext} _.context
+ * @param {string} _.group
+ * @param {{ raw: { value: string, loc?: JRGV.ESTree.Location } }} _.comment
+ */
 const reportEmptyGroup = ({ context, group, comment }) => {
   const loc = locationOfGroupInComment({ group, comment });
 
@@ -60,9 +77,9 @@ const reportEmptyGroup = ({ context, group, comment }) => {
 
 /**
  * @param {object} _
- * @param {Context} _.context
+ * @param {JRGV.ESLint.Rule.RuleContext} _.context
  * @param {string} _.group
- * @param {Comment} _.comment
+ * @param {} _.comment
  * @param {string} [_.closest]
  */
 const reportBadGroupName = ({
@@ -122,21 +139,16 @@ const mustMatch = {
     ]
   },
   create(context) {
+    const sourceCode = context.getSourceCode();
+    const maybeDoNothing = onlyRunOnTestFiles(context);
+    if (maybeDoNothing) {
+      return maybeDoNothing;
+    }
+
     const allowedValues = readAllowedValues(context);
     const autocorrect = allowedValues.length > 0
       ? autocorrectCreator({ words: allowedValues })
-      : (w) => w;
-
-    const sourceCode = context.getSourceCode();
-    const filename = context.getFilename();
-
-    if (!includeFileNames.test(filename)) {
-      return {
-        Program() {
-          // Do nothing.
-        }
-      };
-    }
+      : (/** @type {string} */ w) => w;
 
     const allComments = parseAll(sourceCode.ast.comments, sourceCode.ast.body[0]);
 

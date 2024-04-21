@@ -1,7 +1,7 @@
 {
   "name": "eslint-plugin-jest-runner-groups-validator",
-  "version": "1.2.0",
-  "description": "Validates that Jest group tags applied to tests are from a known set",
+  "version": "1.0.0",
+  "description": "Validates that Jest runner groups applied to test files are from a known set",
   "license": "MIT",
   "engines": {
     "node": ">=10.0.0"

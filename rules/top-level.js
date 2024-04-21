@@ -1,7 +1,8 @@
 // @ts-check
 const { EOL } = require('os');
 const { parseWithComments, print } = require('jest-docblock');
-const { messageIds, defaultTopLevelComment, includeFileNames } = require('../lib/constants');
+const { onlyRunOnTestFiles } = require('../lib/maybe-do-nothing');
+const { messageIds, defaultTopLevelComment } = require('../lib/constants');
 
 const ignoreCommentsContaining = ['eslint-', '@ts-'];
 
@@ -20,7 +21,7 @@ const parseFirstIgnoringTechnical = (comments, bodyStart) => comments
  * Reports the current node as requiring fixing because the are no groups in the first comment.
  * @param {object} _
  * @param {{ comments?: string }} [_.parsed]
- * @param {{ range: [number, number] }} [_.raw]
+ * @param {{ range?: [number, number] }} [_.raw]
  * @param {JRGV.ESLint.Rule.RuleContext} context
  * @param {JRGV.ESTree.Program} node
  */
@@ -65,14 +66,9 @@ const topLevel = {
   },
   create(context) {
     const sourceCode = context.getSourceCode();
-    const filename = context.getFilename();
-
-    if (!includeFileNames.test(filename)) {
-      return {
-        Program() {
-          // Do nothing.
-        }
-      };
+    const maybeDoNothing = onlyRunOnTestFiles(context);
+    if (maybeDoNothing) {
+      return maybeDoNothing;
     }
 
     const first = parseFirstIgnoringTechnical(sourceCode.ast.comments, sourceCode.ast.body[0]);
