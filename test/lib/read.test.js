@@ -2,7 +2,6 @@ const chai = require('chai');
 const proxyquire = require('proxyquire');
 const sinon = require('sinon');
 const sinonChai = require('sinon-chai');
-const sentinel = require('unit-test-sentinel');
 
 const { expect } = chai;
 
