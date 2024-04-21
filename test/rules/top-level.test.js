@@ -85,6 +85,7 @@ ruleTester.run('top-level', rule, {
        *
        * @group TODO
        */
+
       describe();`,
     filename: 'input.test.ts',
     errors: [{
@@ -243,6 +244,7 @@ ruleTester.run('top-level', rule, {
         *
         * @group TODO
         */
+
        describe("", function() {
          /**
           * Description 2
@@ -266,6 +268,7 @@ ruleTester.run('top-level', rule, {
        *
        * @group TODO
        */
+
       /* eslint-disable comma-dangle */
       describe("");`,
     errors: [{
@@ -287,6 +290,7 @@ ruleTester.run('top-level', rule, {
        *
        * @group TODO
        */
+
       /* eslint-disable comma-dangle */
       /* eslint-disable curly */
       describe("");`,
@@ -331,6 +335,7 @@ ruleTester.run('top-level', rule, {
        *
        * @group TODO
        */
+
       // File comment
       describe("");`,
     errors: [{
@@ -351,6 +356,7 @@ ruleTester.run('top-level', rule, {
        *
        * @group TODO
        */
+
       // @group Fast
       describe("");`,
     errors: [{
@@ -371,6 +377,7 @@ ruleTester.run('top-level', rule, {
        *
        * @group TODO
        */
+
       var fs = require('fs');
       describe("");`,
     errors: [{

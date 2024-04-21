@@ -36,7 +36,7 @@ const reportAndFixNoGroups = ({ parsed, raw }, context, node) => {
   context.report({
     node,
     messageId: messageIds.doesNotExist,
-    fix: (f) => f.replaceTextRange(raw?.range ?? [0, 0], block + (raw ? '' : EOL))
+    fix: (f) => f.replaceTextRange(raw?.range ?? [0, 0], block + (raw ? '' : EOL + EOL))
   });
 };
 
