@@ -1,97 +1,116 @@
-# ESLint tags validator
+# ESLint Jest runner groups validator
 
-Provides an ESLint plugin that validates tags applied to Mocha tests. These tags are primarily the ones that have been defined using [@cypress/grep](https://www.npmjs.com/package/@cypress/grep).
+Provides an ESLint plugin that validates Jest runner groups applied to tests. These groups are the ones are defined using [jest-runner-groups](https://www.npmjs.com/package/jest-runner-groups).
 
-This is useful when you would like to restrict tags to a particular subset:
-  * in case a tag is mis-typed and would not then run in your suite;
-  * so that existing tags can be re-used, instead of making new ones accidentally.
+This is useful when you would like to restrict groups to a particular subset:
+  * in case a group is mis-typed and would not then run in your suite;
+  * so that existing groups can be re-used, instead of making new ones accidentally.
 
 ## Installation
 
 Assuming you have ESLint installed already:
 
-`npm install --save-dev eslint-plugin-tags-validator`
+```sh
+npm install --save-dev eslint-plugin-jest-runner-groups-validator
+```
 
 In your `.eslintrc.json` (or similar):
 
 ```json
 {
   "plugins": [
-    "tags-validator"
+    "jest-runner-groups-validator"
   ],
   "rules": {
-    "tags-validator/must-match": "error",
-    "tags-validator/top-level": "error"
+    "jest-runner-groups-validator/must-match": "error",
+    "jest-runner-groups-validator/top-level": "error"
   }
+}
+```
+
+Then in your `package.json` file, define a property:
+```json
+{
+  squadTags: ["Fast", "Slow", "Smoke"]
+  name: ...,
+  dependencies: ...
+  etc...
 }
 ```
 
 ## Configurations
 
-The `top-level` rule, when enabled, will require that tags are defined on the top-level Mocha block in every file. This is usually the beginning `describe`.
+The `top-level` rule, when enabled, will require that a groups docblock is defined in every file that contains tests, as determined by `.test.[ext]` files.
 
-The `must-match` rule will then validate that those tags are restricted to a set of known values. There are three modes in which this rule can run:
-
-### 1. Default
-
-If the set of options is just left empty, then the set of tags is matched against a default list:
-
-`@smoke`, `@regression`,
-
-`@slow`, `@fast`,
-
-`@low`, `@medium`, `@high`, `@critical`
-
-This list is taken from the examples given in @cypress/grep itself.
-
-### 2. Specific allowed values
-
-Your project likely has its own tags. In this case, you can specify these:
+The `must-match` rule will then validate that those groups are restricted to the set of known values in the `package.json` file, as above. There is a single option in this rule, which allows you to specify the name of the property in the package:
 
 ```json
+// .eslintrc.json
 {
-    "tags-validator/must-match": ["error", { "allowedValues": ["@first", "@second"] }]
+    "jest-runner-groups-validator/must-match": ["error", { "propertyName": "groupings" }]
+}
+```
+which corresponds with:
+```json
+// package.json
+{
+  groupings: ["Fast", "Slow", "Smoke"]
+  name: ...,
+  dependencies: ...
+  etc...
 }
 ```
 
-This must be an array of any strings that should be used as tags.
-
-### 3. Taken from a documentation file
-
-If your project has its own tags already documented in a file, then you can pull the tags out of this file. In this case, you can point to the file, relative to the top level of the project:
-
+The default property is `squadTags`. You can define this property as either an array:
 ```json
+// package.json
 {
-    "tags-validator/must-match": ["error", { "markdownFile": "docs/tags.md" }]
+  squadTags: ["Fast", "Slow", "Smoke"]
+  name: ...,
+  dependencies: ...
+  etc...
 }
+
+// Code allows any of:
+/**
+ * @group Fast
+ * @group Slow
+ * @group Smoke
+ */
 ```
 
-The plugin looks through this file for lists of tags, in some sensible format. That is, a line starting with whitespace or symbols (like bullets), the `@` sign, any word characters (the *tag*), followed by any amout of space and other characters (which are ignored).
-
-The tag will include the `@` sign in all cases. For example:
-
-```markdown
-# Filterable tags
-
-These are the tags to be used in the project:
- - @first
- - @second  -> some comment
-   • @third  // some other comment, which will be ignored
-   • @fourth
- + @fifth (more commentary)
-```
-
-will allow tags `@first`, `@second`, `@third`, etc. throughout the project.
-
-### Common options
-
-Additionally, the plugin can allow computed tag names (which are *not* then validated at all). This is in case some of your tags are not literals:
-
+or an object of arrays:
 ```json
+// package.json
 {
-    "tags-validator/must-match": ["error", { "allowComputed": true }]
+  squadTags: {
+    "sanity": ["Fast", "Smoke", "Sanity"],
+    "full": ["Fast", "Slow", "Regression"]
+  },
+  name: ...,
+  dependencies: ...
+  etc...
 }
+
+// Code allows any of:
+/**
+ * @group Fast
+ * @group Slow
+ * @group Smoke
+ * @group Sanity
+ * @group Regression
+ */
 ```
 
-This is *only* applicable when using either `"allowedValues"` or `"markdownFile"`.
+## Fixes
 
+* At the `top-level`, a new comment will be added, with a placeholder group, to the top of the file, if one does not already exist.
+  * If one already existed, the plugin will attempt to add placeholder groups to the first block comment in the file.
+  * The placeholders will also be reported as errors. Specifically, `TODO` is not a valid group name and the top text (if it was empty) needs to be replaced.
+* In `must-match`, there are no fixes. But there are "autocorrect" suggestions for possible group names. e.g.
+  ```javascript
+  /**
+   * @group Slo
+     ^^^^^^^^^^ Invalid group name 'Slo'. Did you mean 'Slow'?
+   */
+  ```
