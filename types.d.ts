@@ -1,6 +1,7 @@
 import * as ESLintModule from 'eslint';
 import * as ESTreeModule from 'estree';
 
+// TODO: remove unused.
 declare namespace ESTree {
   type Property = ESTreeModule.Property;
   type CallExpression = ESTreeModule.CallExpression;
@@ -9,6 +10,8 @@ declare namespace ESTree {
   type SpreadElement = ESTreeModule.SpreadElement;
   type Literal = ESTreeModule.Literal;
   type SimpleLiteral = ESTreeModule.SimpleLiteral;
+  type Program = ESTreeModule.Program;
+  type Comment = ESTreeModule.Comment;
 }
 
 declare namespace ESLint {
@@ -27,4 +30,4 @@ declare module 'eslint' {
   }
 }
 
-export as namespace TV;
+export as namespace JRGV;

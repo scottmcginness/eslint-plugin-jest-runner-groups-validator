@@ -10,16 +10,15 @@ const rule = proxyquire('../../rules/top-level', {
   })
 });
 
-const eol = EOL;
-
 const ruleTester = new RuleTester();
 
 /**
  * @param {TemplateStringsArray} str
  * @param {any[]} [args]
  */
-const dedent = (str, args) => (args ? dedentCore(str, args) : dedentCore(str)).split(/[\r\n]/g).join(eol);
+const dedent = (str, args) => (args ? dedentCore(str, args) : dedentCore(str)).split(/[\r\n]/g).join(EOL);
 
+// TODO: add lines to the invalid errors.
 ruleTester.run('top-level', rule, {
   valid: [{
     name: 'Top level with a default group is allowed',
@@ -36,15 +35,66 @@ ruleTester.run('top-level', rule, {
          * @group Slow
          */
         describe('', function() {});`
-  }],
+  }, {
+    name: 'Top level with preceding ESLint file comment is allowed',
+    code: dedent`
+        /* eslint-disable comma-dangle */
+        /**
+         * @group Fast
+         * @group Slow
+         */
+        describe('', function() {});`
+  }, {
+    name: 'Top level with preceding Typescript file comment is allowed',
+    code: dedent`
+        // @ts-check
+        /**
+         * @group Fast
+         * @group Slow
+         */
+        describe('', function() {});`
+  }, {
+    name: 'Top level with missing groups but in .test.ts file is allowed',
+    code: dedent`
+        describe('', function() {});`,
+    filename: 'other.ts'
+  }, {
+    name: 'Top level with missing groups but in .test.tsx file is allowed',
+    code: dedent`
+        describe('', function() {});`,
+    filename: 'other.tsx'
+  }, {
+    name: 'Top level with missing groups but in .test.js file is allowed',
+    code: dedent`
+        describe('', function() {});`,
+    filename: 'other.js'
+  }, {
+    name: 'Top level with missing groups but in .test.jsx file is allowed',
+    code: dedent`
+        describe('', function() {});`,
+    filename: 'other.jsx'
+  }, {
+    name: 'Top level with missing groups but in .test.mjs file is allowed',
+    code: dedent`
+        describe('', function() {});`,
+    filename: 'other.mjs'
+  }, {
+    name: 'Top level with missing groups but in .test.cjs file is allowed',
+    code: dedent`
+        describe('', function() {});`,
+    filename: 'other.cjs'
+  }].map((c) => ({ ...c, filename: c.filename ?? 'input.test.ts' })),
   invalid: [{
     name: 'Top level requires a group when using defaults',
     code: 'describe();',
     output: dedent`
       /**
+       * TODO: describe the tests in this file.
+       *
        * @group TODO
        */
       describe();`,
+    filename: 'input.test.ts',
     errors: [{
       message: 'Test file must have at least one Jest runner group',
       column: 1,
@@ -52,12 +102,13 @@ ruleTester.run('top-level', rule, {
     }]
   }, {
     name: 'Top level requires a group in its JSDoc block, starting from empty single line comment',
-    only: true,
     code: dedent`
       /* */
       describe("");`,
     output: dedent`
       /**
+       * TODO: describe the tests in this file.
+       *
        * @group TODO
        */
       describe("");`,
@@ -74,6 +125,7 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * File comment
+       *
        * @group TODO
        */
       describe("");`,
@@ -90,6 +142,8 @@ ruleTester.run('top-level', rule, {
       describe("");`,
     output: dedent`
       /**
+       * TODO: describe the tests in this file.
+       *
        * @group TODO
        */
       describe("");`,
@@ -108,6 +162,7 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * Description 1
+        *
         * @group TODO
         */
        describe("");`,
@@ -129,6 +184,7 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * Description 1
+        *
         * @group TODO
         */
        /**
@@ -154,6 +210,7 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * Description 1
+        *
         * @group TODO
         */
        describe("", function() {
@@ -176,6 +233,8 @@ ruleTester.run('top-level', rule, {
        });`,
     output: dedent`
        /**
+        * TODO: describe the tests in this file.
+        *
         * @group TODO
         */
        describe("", function() {
@@ -188,5 +247,118 @@ ruleTester.run('top-level', rule, {
       column: 1,
       endColumn: 4
     }]
-  }]
+  }, {
+    name: 'Top level requires a group in its JSDoc block, starting from a single ESLint disable file comment',
+    code: dedent`
+      /* eslint-disable comma-dangle */
+      describe("");`,
+    output: dedent`
+      /**
+       * TODO: describe the tests in this file.
+       *
+       * @group TODO
+       */
+      /* eslint-disable comma-dangle */
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      column: 1,
+      endColumn: 14
+    }]
+  }, {
+    name: 'Top level requires a group in its JSDoc block, starting from multiple ESLint disable file comments',
+    code: dedent`
+      /* eslint-disable comma-dangle */
+      /* eslint-disable curly */
+      describe("");`,
+    output: dedent`
+      /**
+       * TODO: describe the tests in this file.
+       *
+       * @group TODO
+       */
+      /* eslint-disable comma-dangle */
+      /* eslint-disable curly */
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      column: 1,
+      endColumn: 14
+    }]
+  }, {
+    name: 'Top level requires a group in its JSDoc block, starting from multiple ESLint disable file comments as well as another file-level comment',
+    code: dedent`
+      /* eslint-disable comma-dangle */
+      /* eslint-disable curly */
+      /* File comment */
+      describe("");`,
+    output: dedent`
+      /* eslint-disable comma-dangle */
+      /* eslint-disable curly */
+      /**
+       * File comment
+       *
+       * @group TODO
+       */
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      column: 1,
+      endColumn: 14
+    }]
+  }, {
+    name: 'Top level requires a group in its JSDoc block, starting from a single line comment',
+    code: dedent`
+      // File comment
+      describe("");`,
+    output: dedent`
+      /**
+       * TODO: describe the tests in this file.
+       *
+       * @group TODO
+       */
+      // File comment
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      column: 1,
+      endColumn: 14
+    }]
+  }, {
+    name: 'Top level requires a group in its JSDoc block, starting from a single line comment with a group',
+    code: dedent`
+      // @group Fast
+      describe("");`,
+    output: dedent`
+      /**
+       * TODO: describe the tests in this file.
+       *
+       * @group TODO
+       */
+      // @group Fast
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      column: 1,
+      endColumn: 14
+    }]
+  }, {
+    name: 'Top level requires a group in its JSDoc block, when there are imports',
+    code: dedent`
+      var fs = require('fs');
+      describe("");`,
+    output: dedent`
+      /**
+       * TODO: describe the tests in this file.
+       *
+       * @group TODO
+       */
+      var fs = require('fs');
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      column: 1,
+      endColumn: 14
+    }]
+  }].map((c) => ({ ...c, filename: c.filename ?? 'input.test.ts' }))
 });

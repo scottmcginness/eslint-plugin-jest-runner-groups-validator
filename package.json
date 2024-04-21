@@ -41,7 +41,8 @@
   },
   "types": "types.d.ts",
   "dependencies": {
-    "autocorrect": "^1.2.0"
+    "autocorrect": "^1.2.0",
+    "jest-docblock": "^29.7.0"
   },
   "devDependencies": {
     "@types/dedent": "^0.7.2",
