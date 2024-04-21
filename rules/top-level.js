@@ -10,7 +10,6 @@ const ignoreCommentsContaining = ['eslint-', '@ts-'];
  *
  * @param {JRGV.ESTree.Comment[]} comments
  * @param {JRGV.ESTree.Program['body'][0]} bodyStart
- * @returns
  */
 const parseFirstIgnoringTechnical = (comments, bodyStart) => comments
   .filter((c) => c.type === 'Block' && (!bodyStart || c.loc.start.line < bodyStart.loc.start.line))
@@ -20,14 +19,14 @@ const parseFirstIgnoringTechnical = (comments, bodyStart) => comments
 /**
  * Reports the current node as requiring fixing because the are no groups in the first comment.
  * @param {object} _
- * @param {{ comments?: string }} [_.parsed]
+ * @param {{ comments?: string, pragmas?: object }} [_.parsed]
  * @param {{ range?: [number, number] }} [_.raw]
  * @param {JRGV.ESLint.Rule.RuleContext} context
  * @param {JRGV.ESTree.Program} node
  */
 const reportAndFixNoGroups = ({ parsed, raw }, context, node) => {
   const block = print({
-    pragmas: { group: 'TODO' },
+    pragmas: { ...(parsed?.pragmas ?? {}), group: 'TODO' },
     comments: parsed?.comments ? parsed.comments.trimStart() : defaultTopLevelComment
   });
 

@@ -154,6 +154,30 @@ ruleTester.run('top-level', rule, {
       endColumn: 14
     }]
   }, {
+    name: 'Top level requires a group in its JSDoc block, starting from lines with other pragmas, but does not clobber them',
+    code: dedent`
+      /**
+       * @file Filename
+       * @other thing
+       */
+      describe("");`,
+    output: dedent`
+      /**
+       * TODO: Describe the tests in this file.
+       *
+       * @file Filename
+       * @other thing
+       * @group TODO
+       */
+      describe("");`,
+    errors: [{
+      message: 'Test file must have at least one Jest runner group',
+      line: 5,
+      column: 1,
+      endLine: 5,
+      endColumn: 14
+    }]
+  }, {
     name: 'Top level requires a group in its JSDoc block, when there is a line already in the comment',
     code: dedent`
        /**

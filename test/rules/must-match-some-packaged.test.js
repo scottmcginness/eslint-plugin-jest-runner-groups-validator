@@ -145,6 +145,24 @@ ruleTester.run('must-match', rule, {
       endColumn: 14
     }]
   }, {
+    name: 'Fails if just one group does not match any name in the package and there are multiple groups given',
+    code: dedent`
+        /**
+         * ↓ Interleave other pragmas, in case they interfere.
+         * @filename Filename
+         * @group Fas
+         * @other thing
+         * @group Slow
+         */
+        describe("");`,
+    errors: [{
+      message: "Invalid group name 'Fas'. Did you mean 'Fast'?",
+      line: 4,
+      column: 4,
+      endLine: 4,
+      endColumn: 14
+    }]
+  }, {
     name: 'Fails if there is an empty group',
     code: dedent`
        /**
