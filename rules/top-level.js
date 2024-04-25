@@ -2,7 +2,7 @@
 const { EOL } = require('os');
 const { parseWithComments, print } = require('jest-docblock');
 const { onlyRunOnTestFiles } = require('../lib/maybe-do-nothing');
-const { messageIds, defaultTopLevelComment } = require('../lib/constants');
+const { messageIds, defaultTopLevelComment, emptyCommentLineMatcher } = require('../lib/constants');
 
 const ignoreCommentsContaining = ['eslint-', '@ts-'];
 
@@ -16,6 +16,11 @@ const parseFirstIgnoringTechnical = (comments, bodyStart) => comments
   .map((c) => ({ parsed: parseWithComments(c.value), raw: c }))
   .filter(({ parsed: c }) => ignoreCommentsContaining.every((i) => !c.comments.includes(i)))[0];
 
+const removeEmptyCommentLines = (/** @type {string} */ block) => block
+  .split(EOL)
+  .filter((l) => !emptyCommentLineMatcher.test(l))
+  .join(EOL);
+
 /**
  * Reports the current node as requiring fixing because the are no groups in the first comment.
  * @param {object} _
@@ -25,10 +30,10 @@ const parseFirstIgnoringTechnical = (comments, bodyStart) => comments
  * @param {JRGV.ESTree.Program} node
  */
 const reportAndFixNoGroups = ({ parsed, raw }, context, node) => {
-  const block = print({
+  const block = removeEmptyCommentLines(print({
     pragmas: { ...(parsed?.pragmas ?? {}), group: 'TODO' },
     comments: parsed?.comments ? parsed.comments.trimStart() : defaultTopLevelComment
-  });
+  }));
 
   // Add EOL to fix only when there was no original comment.
   // If there was one, it includes its own whitespace.

@@ -82,7 +82,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
 
@@ -103,7 +102,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
       describe("");`,
@@ -122,7 +120,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * File comment
-       *
        * @group TODO
        */
       describe("");`,
@@ -142,7 +139,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
       describe("");`,
@@ -164,7 +160,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @file Filename
        * @other thing
        * @group TODO
@@ -187,7 +182,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * Description 1
-        *
         * @group TODO
         */
        describe("");`,
@@ -211,7 +205,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * Description 1
-        *
         * @group TODO
         */
        /**
@@ -239,7 +232,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * Description 1
-        *
         * @group TODO
         */
        describe("", function() {
@@ -265,7 +257,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
        /**
         * TODO: Describe the tests in this file.
-        *
         * @group TODO
         */
 
@@ -289,7 +280,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
 
@@ -311,7 +301,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
 
@@ -337,7 +326,6 @@ ruleTester.run('top-level', rule, {
       /* eslint-disable curly */
       /**
        * File comment
-       *
        * @group TODO
        */
       describe("");`,
@@ -356,7 +344,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
 
@@ -377,7 +364,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
 
@@ -398,7 +384,6 @@ ruleTester.run('top-level', rule, {
     output: dedent`
       /**
        * TODO: Describe the tests in this file.
-       *
        * @group TODO
        */
 
